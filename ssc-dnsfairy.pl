@@ -37,10 +37,10 @@ die $error if $error;
 
 foreach (values %$result)
         {
-        s/\(\S*\)//gi;
-        s/\s/-/g;
-        #$hostname=$_ . '.ssnc.global';
-        $hostname=(/\.net\.ssnc\.global/ ? $_ : $_ . '.net.ssnc.global');
+	s/^([^.]++).*/$1/; #Cut out only the hostname if there's a FQDN.
+	s/\(\S*\)//gi;    #Kill garbage in parens, including parens
+	s/\s/-/g;          #Kill whitespace
+	$hostname=$_ . '.net.ssnc.global'; # Form hostname with new FQDN
         }
 
 # Get Index Numbers of All interfaces with IP
@@ -79,11 +79,15 @@ while (scalar @$ifindexref > 0) # Need to put a loop to prevent asking more than
 
 $session->close;
 
+# Build and spit out the CSV
+
 my @csvfields=qw(ptrdname address ptrformat);
 my $csv = Class::CSV->new(fields=>\@csvfields);
 $csv->add_line($csv->fields);
 
-foreach my $index (keys %intnamehash)
+#print pl2xml(\%iphash);
+#print pl2xml(\%intnamehash);
+foreach my $index (keys %iphash)
 	{
 	my $ip = new Net::IP($iphash{$index});
 	$csv->add_line( {ptrdname=>$intnamehash{$index},
